@@ -3,7 +3,7 @@ import Combine
 
 public protocol BaseTypedEvent: class {}
 
-open class SwiftEventType<Object>: BaseTypedEvent {
+open class TypedEvent<Object>: BaseTypedEvent {
     public typealias Subscriber = AnyObject
     private struct WeakSubscriber {
         weak var subscriber: Subscriber?

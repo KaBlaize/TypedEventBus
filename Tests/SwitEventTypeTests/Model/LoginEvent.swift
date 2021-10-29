@@ -8,4 +8,4 @@
 import Foundation
 import SwitEventType
 
-class LoginEvent: SwiftEventType<Person> {}
+class LoginEvent: TypedEvent<Person> {}
