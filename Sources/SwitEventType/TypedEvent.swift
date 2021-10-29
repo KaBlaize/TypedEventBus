@@ -1,26 +1,39 @@
 import Foundation
 import Combine
 
-public protocol BaseTypedEvent: class {}
+public protocol BaseTypedEvent: AnyObject {}
 
 open class TypedEvent<Object>: BaseTypedEvent {
     public typealias Subscriber = AnyObject
+
     private struct WeakSubscriber {
         weak var subscriber: Subscriber?
-        let closure: (Object) -> Void
+        let closure: (TypedEvent<Object>) -> Void
     }
 
     private lazy var subscribers: [WeakSubscriber] = []
+    public private(set) var object: Object?
 
-    public init() {}
+    public required init() {}
 
-    public func post(_ object: Object) {
+    public init(_ object: Object) {
+        self.object = object
+    }
+
+    public func post(_ object: TypedEvent) {
         subscribers.forEach {
             $0.closure(object)
         }
     }
 
-    public func subscribe<T: Subscriber & Equatable>(_ subscriber: T, _ closure: @escaping (Object) -> Void) -> AnyCancellable {
+    public func post(_ object: Object) {
+        self.object = object
+        subscribers.forEach {
+            $0.closure(self)
+        }
+    }
+
+    public func subscribe<T: Subscriber & Equatable>(_ subscriber: T, _ closure: @escaping (TypedEvent<Object>) -> Void) -> AnyCancellable {
         cleanup()
         subscribers.append(WeakSubscriber(subscriber: subscriber, closure: closure))
         return AnyCancellable { [weak self] in

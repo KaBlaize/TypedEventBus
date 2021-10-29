@@ -9,12 +9,28 @@ final class SwitEventTypeTests: XCTestCase {
         let callExpectation = XCTestExpectation(description: "subscribe called")
 
         let loginEvent = LoginEvent()
-        loginEvent.subscribe(self) { object in
-            XCTAssertEqual(object.name, "Joe")
+        loginEvent.subscribe(self) { event in
+            XCTAssertEqual(event.object?.name ?? "", "Joe")
             callExpectation.fulfill()
         }.store(in: &cancellables)
 
+//        loginEvent.post(LoginEvent(Person(name: "Joe")))
         loginEvent.post(Person(name: "Joe"))
+
+        wait(for: [callExpectation], timeout: 200)
+    }
+
+    func testWithEventBus() {
+        let callExpectation = XCTestExpectation(description: "subscribe called")
+
+        let eventBus = TypedEventBus()
+        eventBus.subscribe(to: LoginEvent.self, self) { event in
+            XCTAssertEqual(event.object?.name ?? "", "Joe")
+            callExpectation.fulfill()
+        }.store(in: &cancellables)
+
+        eventBus.post(LoginEvent(Person(name: "Joe")))
+
         wait(for: [callExpectation], timeout: 200)
     }
 }
