@@ -33,7 +33,7 @@ open class TypedEvent<Object>: BaseTypedEvent {
         }
     }
 
-    public func subscribe<T: Subscriber & Equatable>(_ subscriber: T, _ closure: @escaping (TypedEvent<Object>) -> Void) -> AnyCancellable {
+    public func subscribeEvent<T: Subscriber & Equatable>(_ subscriber: T, _ closure: @escaping (TypedEvent<Object>) -> Void) -> AnyCancellable {
         cleanup()
         subscribers.append(WeakSubscriber(subscriber: subscriber, closure: closure))
         return AnyCancellable { [weak self] in
