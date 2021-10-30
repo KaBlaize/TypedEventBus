@@ -1,4 +1,4 @@
 import Foundation
-import SwitEventType
+import TypedEventBus
 
 class LoginEvent: TypedEvent<Person> {}

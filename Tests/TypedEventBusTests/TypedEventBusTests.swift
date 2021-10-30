@@ -1,8 +1,8 @@
 import XCTest
 import Combine
-@testable import SwitEventType
+@testable import TypedEventBus
 
-final class SwitEventTypeTests: XCTestCase {
+final class TypedEventBusTests: XCTestCase {
     var cancellables = Set<AnyCancellable>()
 
     func testWithEvent() throws {
