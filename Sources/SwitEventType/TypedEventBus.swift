@@ -1,38 +1,36 @@
 import Foundation
 import Combine
 
-public class TypedEventBus {
-    private var events = [BaseTypedEvent]()
+open class TypedEventBus {
+    private var subscriberStores = [EventSubscriberDataSource]()
 
     public init() {}
 
-    public func post<O, Event: TypedEvent<O>>(_ postedEvent: Event) {
-        guard let event = events.first(where: { $0 as? Event != nil }) as? Event else { return }
-        event.post(postedEvent)
+    open func post<O, Event: TypedEvent<O>>(_ event: Event) {
+        let store = getOrCreateSubscriberDataSource(for: Event.self)
+        store.post(event)
     }
 
-    public func subscribeEvent<T: TypedEvent.Subscriber & Equatable, O, Event: TypedEvent<O>>(to eventType: Event.Type, _ subscriber: T, _ closure: @escaping (Event) -> Void) -> AnyCancellable {
-        let event = getOrCreateEvent(for: eventType)
-        return event.subscribeEvent(subscriber) { event in
-            closure(event as! Event)
-        }
+    open func subscribeEvent<O, Event: TypedEvent<O>>(to eventType: Event.Type, _ closure: @escaping (Event) -> Void) -> AnyCancellable {
+        let store = getOrCreateSubscriberDataSource(for: Event.self)
+        return store.subscribeEvent(closure)
     }
 
-    public func subscribe<T: TypedEvent.Subscriber & Equatable, O, Event: TypedEvent<O>>(to eventType: Event.Type, _ subscriber: T, _ closure: @escaping (O) -> Void) -> AnyCancellable {
-        let event = getOrCreateEvent(for: eventType)
-        return event.subscribeEvent(subscriber) { event in
+    open func subscribe<O, Event: TypedEvent<O>>(to eventType: Event.Type, _ closure: @escaping (O) -> Void) -> AnyCancellable {
+        let store = getOrCreateSubscriberDataSource(for: Event.self)
+        return store.subscribeEvent { event in
             guard let object = event.object else { return }
             closure(object)
         }
     }
 
-    private func getOrCreateEvent<O, Event: TypedEvent<O>>(for type: Event.Type) -> Event {
-        if let event = events.first(where: { $0 as? Event != nil }) as? Event {
-            return event
+    private func getOrCreateSubscriberDataSource<O, Event: TypedEvent<O>, DataStore: TypedEventSubscriberDataSource<Event>>(for type: Event.Type) -> DataStore {
+        if let dataStore = subscriberStores.first(where: { $0 as? DataStore != nil }) as? DataStore {
+            return dataStore
         } else {
-            let event = Event()
-            events.append(event)
-            return event
+            let dataStore = DataStore()
+            subscriberStores.append(dataStore)
+            return dataStore
         }
     }
 }
