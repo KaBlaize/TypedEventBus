@@ -19,8 +19,7 @@ final class TypedEventSubscriberDataSource<TypedEvent>: EventSubscriberDataSourc
 
     // MARK: - Properties
 
-    private var bus: TypedEventBus { TypedEventBus.main }
-    private var subscribers: [Subscription] = []
+    private var subscriptions: [Subscription] = []
     var queue: DispatchQueue
 
     // MARK: - Lifecycle
@@ -36,7 +35,7 @@ extension TypedEventSubscriberDataSource {
     final func post(_ object: TypedEvent) {
         addToQueue(type: .post) { [weak self] in
             guard let self = self else { return }
-            self.subscribers.forEach { $0.closure(object) }
+            self.subscriptions.forEach { $0.closure(object) }
         }
     }
 
@@ -44,7 +43,7 @@ extension TypedEventSubscriberDataSource {
         let subscriber = UUID().uuidString
         addToQueue { [weak self] in
             guard let self = self else { return }
-            self.subscribers = self.subscribers + [Subscription(subscriber: subscriber, closure: closure)]
+            self.subscriptions = self.subscriptions + [Subscription(subscriber: subscriber, closure: closure)]
         }
         return AnyCancellable { [weak self] in
             self?.unsubscribe(subscriber)
@@ -54,7 +53,7 @@ extension TypedEventSubscriberDataSource {
     final func reset() {
         addToQueue { [weak self] in
             guard let self = self else { return }
-            self.subscribers = []
+            self.subscriptions = []
         }
     }
 }
@@ -74,8 +73,8 @@ private extension TypedEventSubscriberDataSource {
 
     final private func unsubscribe(_ subscriber: Subscriber) {
         addToQueue { [weak self] in
-            guard let self = self, self.subscribers.count > 0 else { return }
-            self.subscribers = self.subscribers.filter { $0.subscriber != subscriber }
+            guard let self = self, self.subscriptions.count > 0 else { return }
+            self.subscriptions = self.subscriptions.filter { $0.subscriber != subscriber }
         }
     }
 }
