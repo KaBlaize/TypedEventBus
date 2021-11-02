@@ -8,6 +8,8 @@ protocol EventSubscriberDataSource: AnyObject {
 }
 
 final class TypedEventSubscriberDataSource<TypedEvent>: EventSubscriberDataSource {
+    // MARK: - Private Type declarations
+
     private typealias Subscriber = String
 
     private struct Subscription {
@@ -15,14 +17,22 @@ final class TypedEventSubscriberDataSource<TypedEvent>: EventSubscriberDataSourc
         let closure: (TypedEvent) -> Void
     }
 
+    // MARK: - Properties
+
     private var bus: TypedEventBus { TypedEventBus.main }
     private var subscribers: [Subscription] = []
     var queue: DispatchQueue
 
+    // MARK: - Lifecycle
+
     init() {
         queue = DispatchQueue(label: "TypedEventSubscriberDataSource-\(TypedEvent.self)", qos: .background)
     }
+}
 
+// MARK: - Public functions
+
+extension TypedEventSubscriberDataSource {
     final func post(_ object: TypedEvent) {
         addToQueue(type: .post) { [weak self] in
             guard let self = self else { return }
@@ -47,23 +57,25 @@ final class TypedEventSubscriberDataSource<TypedEvent>: EventSubscriberDataSourc
             self.subscribers = []
         }
     }
-
-    final private func unsubscribe(_ subscriber: Subscriber) {
-        addToQueue { [weak self] in
-            guard let self = self, self.subscribers.count > 0 else { return }
-            self.subscribers = self.subscribers.filter { $0.subscriber != subscriber }
-        }
-    }
 }
+
+// MARK: - Private functions
 
 private extension TypedEventSubscriberDataSource {
     private enum OperationType {
         case subscription, post
     }
 
-    private final func addToQueue(type: OperationType = .subscription, _ task: @escaping () -> Void) {
+    final private func addToQueue(type: OperationType = .subscription, _ task: @escaping () -> Void) {
         queue.async {
             task()
+        }
+    }
+
+    final private func unsubscribe(_ subscriber: Subscriber) {
+        addToQueue { [weak self] in
+            guard let self = self, self.subscribers.count > 0 else { return }
+            self.subscribers = self.subscribers.filter { $0.subscriber != subscriber }
         }
     }
 }
