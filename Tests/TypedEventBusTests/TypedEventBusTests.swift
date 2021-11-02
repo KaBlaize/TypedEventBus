@@ -14,33 +14,6 @@ final class TypedEventBusTests: XCTestCase {
         TypedEventBus.main.queue = DispatchQueue.main
     }
 
-    func testWithEvent() throws {
-        measure {
-            let callExpectationLogin = XCTestExpectation(description: "subscribe called - login")
-            let callExpectationLogout = XCTestExpectation(description: "subscribe called - logout")
-
-            let loginEvent = LoginEvent()
-            let stateChangedEvent = ApplicationStateChangedEvent()
-            let logoutEvent = LogoutEvent()
-            loginEvent.subscribeEvent { event in
-                XCTAssertEqual(event.object?.name ?? "", "Joe")
-                callExpectationLogin.fulfill()
-            }.store(in: &cancellables)
-
-            logoutEvent.subscribeEvent { event in
-                XCTAssertEqual(event.object?.name ?? "", "Martin")
-                callExpectationLogout.fulfill()
-            }.store(in: &cancellables)
-
-
-            stateChangedEvent.post(.authenticated)
-            logoutEvent.post(Person(name: "Martin"))
-            loginEvent.post(Person(name: "Joe"))
-
-            wait(for: [callExpectationLogout, callExpectationLogin], timeout: timeout)
-        }
-    }
-
     func testWithEventBus() {
         measure {
             let callExpectationLogin = XCTestExpectation(description: "subscribe called - login")
