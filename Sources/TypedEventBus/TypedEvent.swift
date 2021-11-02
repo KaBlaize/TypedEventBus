@@ -22,4 +22,11 @@ open class TypedEvent<Object>: BaseTypedEvent {
     public func subscribeEvent(_ closure: @escaping (TypedEvent<Object>) -> Void) -> AnyCancellable {
         subscriberStore.subscribeEvent(closure)
     }
+
+    public func subscribe(_ closure: @escaping (Object) -> Void) -> AnyCancellable {
+        subscriberStore.subscribeEvent({ event in
+            guard let object = event.object else { return }
+            closure(object)
+        })
+    }
 }
