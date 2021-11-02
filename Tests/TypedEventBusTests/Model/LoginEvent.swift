@@ -1,4 +1,6 @@
 import Foundation
 import TypedEventBus
 
-class LoginEvent: TypedEvent<Person> {}
+final class LoginEvent: TypedEvent<Person> {
+    let extraProperty = "extra"
+}
