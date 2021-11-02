@@ -5,11 +5,8 @@ open class TypedEventBus {
     // MARK: - Properties
 
     public static let main = TypedEventBus()
-    public var queue: DispatchQueue? {
-        get {
-            subscriberStores.first?.queue
-        } set {
-            guard let queue = newValue else { return }
+    public var queue: DispatchQueue {
+        didSet {
             subscriberStores.forEach { $0.queue = queue }
         }
     }
@@ -17,7 +14,9 @@ open class TypedEventBus {
 
     // MARK: - Lifecycle
 
-    public init() {}
+    public init(queue: DispatchQueue = DispatchQueue(label: "TypedEventBus")) {
+        self.queue = queue
+    }
 }
 
 // MARK: - Public functions
@@ -51,7 +50,7 @@ extension TypedEventBus {
         if let dataStore = subscriberStores.first(where: { $0 as? DataStore != nil }) as? DataStore {
             return dataStore
         } else {
-            let dataStore = DataStore()
+            let dataStore = DataStore(queue: queue)
             subscriberStores.append(dataStore)
             return dataStore
         }

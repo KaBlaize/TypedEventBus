@@ -24,8 +24,8 @@ final class TypedEventSubscriberDataSource<TypedEvent>: EventSubscriberDataSourc
 
     // MARK: - Lifecycle
 
-    init() {
-        queue = DispatchQueue(label: "TypedEventSubscriberDataSource-\(TypedEvent.self)", qos: .background)
+    init(queue: DispatchQueue = DispatchQueue(label: "TypedEventSubscriberDataSource-\(TypedEvent.self)", qos: .background)) {
+        self.queue = queue
     }
 }
 
@@ -33,7 +33,7 @@ final class TypedEventSubscriberDataSource<TypedEvent>: EventSubscriberDataSourc
 
 extension TypedEventSubscriberDataSource {
     final func post(_ object: TypedEvent) {
-        addToQueue(type: .post) { [weak self] in
+        addToQueue(type: .eventDispatch) { [weak self] in
             guard let self = self else { return }
             self.subscriptions.forEach { $0.closure(object) }
         }
@@ -62,10 +62,10 @@ extension TypedEventSubscriberDataSource {
 
 private extension TypedEventSubscriberDataSource {
     private enum OperationType {
-        case subscription, post
+        case subscriptionChange, eventDispatch
     }
 
-    final private func addToQueue(type: OperationType = .subscription, _ task: @escaping () -> Void) {
+    final private func addToQueue(type: OperationType = .subscriptionChange, _ task: @escaping () -> Void) {
         queue.async {
             task()
         }
