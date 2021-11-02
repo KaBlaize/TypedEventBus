@@ -4,10 +4,10 @@ import Combine
 protocol EventSubscriberDataSource: AnyObject {
     var queue: DispatchQueue { get set }
 
-    func reset()
+    func deleteAllSubscribers()
 }
 
-final class TypedEventSubscriberDataSource<TypedEvent>: EventSubscriberDataSource {
+final class TypedEventSubscriberRepository<TypedEvent>: EventSubscriberDataSource {
     // MARK: - Private Type declarations
 
     private typealias Subscriber = String
@@ -31,15 +31,15 @@ final class TypedEventSubscriberDataSource<TypedEvent>: EventSubscriberDataSourc
 
 // MARK: - Public functions
 
-extension TypedEventSubscriberDataSource {
-    final func post(_ object: TypedEvent) {
+extension TypedEventSubscriberRepository {
+    final func addEvent(_ event: TypedEvent) {
         addToQueue(type: .eventDispatch) { [weak self] in
             guard let self = self else { return }
-            self.subscriptions.forEach { $0.closure(object) }
+            self.subscriptions.forEach { $0.closure(event) }
         }
     }
 
-    final func subscribeEvent(_ closure: @escaping (TypedEvent) -> Void) -> AnyCancellable {
+    final func addSubscriber(_ closure: @escaping (TypedEvent) -> Void) -> AnyCancellable {
         let subscriber = UUID().uuidString
         addToQueue { [weak self] in
             guard let self = self else { return }
@@ -50,7 +50,7 @@ extension TypedEventSubscriberDataSource {
         }
     }
 
-    final func reset() {
+    final func deleteAllSubscribers() {
         addToQueue { [weak self] in
             guard let self = self else { return }
             self.subscriptions = []
@@ -60,7 +60,7 @@ extension TypedEventSubscriberDataSource {
 
 // MARK: - Private functions
 
-private extension TypedEventSubscriberDataSource {
+private extension TypedEventSubscriberRepository {
     private enum OperationType {
         case subscriptionChange, eventDispatch
     }
